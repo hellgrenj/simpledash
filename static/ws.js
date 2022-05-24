@@ -1,5 +1,6 @@
 export const connectAndConsume = (handleMessage) => {
-    const ws = new WebSocket("ws://" + window.location.host + "/ws");
+    const protocol = location.protocol === 'https:' ? 'wss://': 'ws://';
+    const ws = new WebSocket(`${protocol}${window.location.host}/ws`);
     ws.onopen = () => {
         console.log('successfully connected...');
     }

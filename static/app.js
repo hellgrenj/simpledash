@@ -31,7 +31,7 @@ const App = {
             const node = document.createElement('div');
             node.className = 'node';
             node.style = `grid-column: ${nodeIndex};`;
-            node.innerHTML = `<div><span>${new Date().toLocaleTimeString()}</span><h2>${nodeKey}</h2>(hover over pod to se image)<br/></div>`;
+            node.innerHTML = `<div><span>${new Date().toLocaleTimeString()}</span><h2>${nodeKey}</h2>(hover over pod to see image)<br/></div>`;
             return node;
         },
         clearNodes: () => {
