@@ -1,0 +1,13 @@
+apiVersion: skaffold/v2beta11
+kind: Config
+build:
+  artifacts:
+    - image: simpledash
+      context: .
+      docker:
+        dockerfile: Dockerfile
+deploy:
+  kubeContext: docker-desktop
+  kubectl:
+    manifests:
+      - ./simpledash.yaml
