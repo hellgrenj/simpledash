@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -21,6 +20,7 @@ type PodInfo struct {
 }
 type IngressInfo struct {
 	Endpoint string
+	Ip       string
 }
 type NodeInfo map[string][]PodInfo
 type ClusterInfo struct {
@@ -34,14 +34,8 @@ func MonitorCluster(clusterInfoChan chan<- ClusterInfo) {
 		clusterInfo := ClusterInfo{
 			Nodes: make(NodeInfo),
 		}
-		var namespaces []string
-		err := json.Unmarshal([]byte(os.Getenv("SIMPLEDASH_NAMESPACES")), &namespaces)
-		if err != nil {
-			log.Println("failed to parse SIMPLEDASH_NAMESPACES environment variable as JSON")
-			log.Println("checking all namespaces...")
-			namespaces = []string{""}
-		}
-		for _, namespace := range namespaces {
+		sc := getContext()
+		for _, namespace := range sc.Namespaces {
 			getPodsByNamespace(clientset, &clusterInfo, namespace)
 			getIngressInfo(clientset, &clusterInfo, namespace)
 		}
@@ -73,6 +67,13 @@ type Ingress struct {
 				Host string
 			}
 		}
+		Status struct {
+			LoadBalancer struct {
+				Ingress []struct {
+					Ip string
+				}
+			}
+		}
 	}
 }
 
@@ -83,19 +84,23 @@ func getIngressInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, n
 		log.Println(err)
 		return
 	}
+	fmt.Println(string(ingressInfo))
 	var ingress Ingress
 	json.Unmarshal(ingressInfo, &ingress)
 	if err != nil {
 		log.Println(err)
 		return
 	}
+
 	for _, item := range ingress.Items {
+		ip := item.Status.LoadBalancer.Ingress[0].Ip
 		for _, rule := range item.Spec.Rules {
 			if rule.Host == "" {
 				return
 			}
 			ingressInfo := IngressInfo{
 				Endpoint: rule.Host,
+				Ip:       ip,
 			}
 			clusterInfo.Ingresses = append(clusterInfo.Ingresses, ingressInfo)
 		}

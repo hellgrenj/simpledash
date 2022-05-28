@@ -2,6 +2,10 @@ import { connectAndConsume } from "./ws.js";
 const App = {
     element: document.getElementById('app'),
     simpledashContext: {},
+    state: {
+        nsfilter: '',
+        clusterInfo: null
+    },
     $: {
         getContext: async () => {
             const response = await fetch('/context');
@@ -10,15 +14,25 @@ const App = {
         renderHeader: () => {
             const header = document.createElement('div');
             header.className = 'header';
-            header.innerHTML = `<h2>simpledash v.0.1 - Cluster: ${App.simpledashContext.ClusterName}</h2>`;
+
+            const html = `
+            <h2>simpledash v.0.1 - Cluster: ${App.simpledashContext.ClusterName}</h2>
+            <input id="nsfilter" placeholder="filter on namespace">
+            `
+            header.innerHTML = html;
             App.element.appendChild(header);
+            const nsfilterInput = document.getElementById("nsfilter");
+            nsfilterInput.addEventListener('keyup', () => {
+                console.log('re-rendering clusterinfo with nsfilter ', nsfilterInput.value);
+                App.state.nsfilter = nsfilterInput.value;
+                App.$.renderClusterInfo(App.state.clusterInfo);
+            });
         },
         addIngressSection: () => {
             const ingress = document.createElement('div');
             ingress.className = 'ingress';
             App.element.appendChild(ingress);
         },
-        namespaceColors: {},
         getRandomColor: () => {
             var letters = '0123456789ABCDEF';
             var color = '#';
@@ -40,7 +54,12 @@ const App = {
                 elements[0].parentNode.removeChild(elements[0]);
             }
         },
+        namespaceColors: {},
         createPod: (pod) => {
+            if (App.state.nsfilter !== '' && !pod.Namespace.startsWith(App.state.nsfilter)) {
+                console.log(`pod with namespace ${pod.Namespace} does not match current filter ${App.state.nsfilter}`);
+                return null;
+            }
             let podBgColor = "#FFFFFF";
             if (pod.Status == "Running") {
                 podBgColor = "rgb(182, 218, 129)";
@@ -65,18 +84,29 @@ const App = {
         renderNode: (clusterInfo, nodeElement, key) => {
             clusterInfo.Nodes[key].forEach((pod) => {
                 const podElement = App.$.createPod(pod)
-                nodeElement.appendChild(podElement);
+                if (podElement) {
+                    nodeElement.appendChild(podElement);
+                }
             });
         },
         renderIngress: (clusterInfo) => {
             const ingressElement = document.getElementsByClassName('ingress')[0];
-            let ingressHtml = 'Endpoints';
+            let ingressHtml = 'Endpoints: <br/>';
             if (clusterInfo.Ingresses) {
                 clusterInfo.Ingresses.forEach(ingress => {
-                    ingressHtml = `${ingressHtml} <br/> ${ingress.Endpoint}`;
+                    ingressHtml = `${ingressHtml} <br/> ${ingress.Endpoint} (${ingress.Ip})`;
                 });
             }
             ingressElement.innerHTML = ingressHtml;
+        },
+        renderClusterInfo: () => {
+            App.$.clearNodes();
+            Object.keys(App.state.clusterInfo.Nodes).forEach(async (key, nodeIndex) => {
+                const nodeElement = App.$.createNode(key, nodeIndex);
+                App.$.renderNode(App.state.clusterInfo, nodeElement, key);
+                App.$.renderIngress(App.state.clusterInfo);
+                App.element.appendChild(nodeElement);
+            })
         }
     },
     init: async () => {
@@ -85,13 +115,8 @@ const App = {
         App.$.addIngressSection();
         connectAndConsume((e) => {
             const clusterInfo = JSON.parse(e.data);
-            App.$.clearNodes();
-            Object.keys(clusterInfo.Nodes).forEach(async (key, nodeIndex) => {
-                const nodeElement = App.$.createNode(key, nodeIndex);
-                App.$.renderNode(clusterInfo, nodeElement, key);
-                App.$.renderIngress(clusterInfo);
-                App.element.appendChild(nodeElement);
-            })
+            App.state.clusterInfo = clusterInfo;
+            App.$.renderClusterInfo();
         });
     }
 }

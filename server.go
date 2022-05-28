@@ -4,14 +4,10 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/gorilla/mux"
 )
 
-type SimpledashContext struct {
-	ClusterName string
-}
 type server struct {
 	router            *mux.Router
 	SimpledashContext SimpledashContext
@@ -38,12 +34,7 @@ func (s *server) getContext(w http.ResponseWriter, r *http.Request) {
 }
 
 func newServer() *server {
-	clusterName := os.Getenv("SIMPLEDASH_CLUSTERNAME")
-	if clusterName == "" {
-		log.Println("failed to fetch SIMPLEDASH_CLUSTERNAME environment variable")
-		clusterName = "unknown cluster"
-	}
-	sc := SimpledashContext{ClusterName: clusterName}
+	sc := getContext()
 	s := &server{router: mux.NewRouter(), SimpledashContext: sc}
 	s.router.HandleFunc("/", s.serveFiles).Methods("GET")
 	s.router.HandleFunc("/context", s.getContext).Methods("GET")
