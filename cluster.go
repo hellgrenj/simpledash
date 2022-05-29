@@ -84,7 +84,6 @@ func getIngressInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, n
 		log.Println(err)
 		return
 	}
-	fmt.Println(string(ingressInfo))
 	var ingress Ingress
 	json.Unmarshal(ingressInfo, &ingress)
 	if err != nil {
