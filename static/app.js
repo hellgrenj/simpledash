@@ -4,7 +4,7 @@ const App = {
     simpledashContext: {},
     state: {
         nsfilter: '',
-        clusterInfo: null,
+        clusterInfo: {},
         namespaceColors: {},
         latestTimeStamp: '',
     },
@@ -72,10 +72,13 @@ const App = {
             }
             podElement.className = 'pod';
             podElement.style = `background-color: ${podBgColor}; border: 4px solid ${App.state.namespaceColors[pod.Namespace]};`;
-            podElement.innerHTML = `
-                   ${pod.Name}<br/>
-                   ${pod.Namespace}
-                `;
+            const imageParts = pod.Image.split(':');
+            const html = `
+            ${pod.Name}<br/>
+            <i>${pod.Namespace}</i><br/>
+            <b>tag: ${imageParts[imageParts.length - 1]}</b>
+         `
+            podElement.innerHTML = html;
             podElement.title = pod.Image;
             return podElement;
         },
@@ -114,9 +117,8 @@ const App = {
         connectAndConsume((e) => {
             const clusterInfo = JSON.parse(e.data);
             App.state.clusterInfo = clusterInfo;
-            const timeString = new Date().toLocaleTimeString();
-            App.state.latestTimeStamp = timeString;
-            App.$.renderClusterInfo(timeString);
+            App.state.latestTimeStamp = new Date().toLocaleTimeString();
+            App.$.renderClusterInfo(App.state.latestTimeStamp);
         });
     }
 }
