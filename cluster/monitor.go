@@ -1,4 +1,4 @@
-package main
+package cluster
 
 import (
 	"context"
@@ -7,34 +7,19 @@ import (
 	"log"
 	"time"
 
+	c "github.com/hellgrenj/simpledash/context"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
-type PodInfo struct {
-	Namespace string
-	Name      string
-	Image     string
-	Status    string
-}
-type IngressInfo struct {
-	Endpoint string
-	Ip       string
-}
-type NodeInfo map[string][]PodInfo
-type ClusterInfo struct {
-	Nodes     NodeInfo
-	Ingresses []IngressInfo
-}
-
-func MonitorCluster(clusterInfoChan chan<- ClusterInfo) {
+func StartMonitor(clusterInfoChan chan<- ClusterInfo) {
 	clientset := connectk8s()
 	for {
 		clusterInfo := ClusterInfo{
 			Nodes: make(NodeInfo),
 		}
-		sc := getContext()
+		sc := c.GetContext()
 		for _, namespace := range sc.Namespaces {
 			getPodsByNamespace(clientset, &clusterInfo, namespace)
 			getIngressInfo(clientset, &clusterInfo, namespace)

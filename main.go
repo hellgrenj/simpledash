@@ -1,7 +1,12 @@
 package main
 
+import (
+	"github.com/hellgrenj/simpledash/cluster"
+	"github.com/hellgrenj/simpledash/server"
+)
+
 func main() {
-	clusterInfoChan := make(chan ClusterInfo)
-	go MonitorCluster(clusterInfoChan)
-	Serve(clusterInfoChan)
+	clusterInfoChan := make(chan cluster.ClusterInfo)
+	go cluster.StartMonitor(clusterInfoChan)
+	server.Serve(clusterInfoChan)
 }
