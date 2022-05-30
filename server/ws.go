@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"log"
@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/hellgrenj/simpledash/cluster"
 )
 
 var upgrader = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
@@ -53,7 +54,7 @@ func connect(w http.ResponseWriter, r *http.Request) {
 	}()
 }
 
-func publishEventsToWsConnections(clusterInfoChan <-chan ClusterInfo) {
+func publishEventsToWsConnections(clusterInfoChan <-chan cluster.ClusterInfo) {
 	for {
 		clusterInfo := <-clusterInfoChan
 		for c := range connections {

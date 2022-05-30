@@ -1,4 +1,4 @@
-package main
+package context
 
 import (
 	"encoding/json"
@@ -11,7 +11,7 @@ type SimpledashContext struct {
 	Namespaces  []string
 }
 
-func getContext() SimpledashContext {
+func GetContext() SimpledashContext {
 	clusterName := os.Getenv("SIMPLEDASH_CLUSTERNAME")
 	if clusterName == "" {
 		log.Println("failed to fetch SIMPLEDASH_CLUSTERNAME environment variable")

@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"encoding/json"
@@ -6,11 +6,13 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/hellgrenj/simpledash/cluster"
+	c "github.com/hellgrenj/simpledash/context"
 )
 
 type server struct {
 	router            *mux.Router
-	SimpledashContext SimpledashContext
+	SimpledashContext c.SimpledashContext
 }
 
 func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -34,7 +36,7 @@ func (s *server) getContext(w http.ResponseWriter, r *http.Request) {
 }
 
 func newServer() *server {
-	sc := getContext()
+	sc := c.GetContext()
 	s := &server{router: mux.NewRouter(), SimpledashContext: sc}
 	s.router.HandleFunc("/", s.serveFiles).Methods("GET")
 	s.router.HandleFunc("/context", s.getContext).Methods("GET")
@@ -45,7 +47,7 @@ func newServer() *server {
 	return s
 }
 
-func Serve(clusterInfoChan <-chan ClusterInfo) {
+func Serve(clusterInfoChan <-chan cluster.ClusterInfo) {
 	go publishEventsToWsConnections(clusterInfoChan)
 	log.Println("Starting server...")
 	s := newServer()
