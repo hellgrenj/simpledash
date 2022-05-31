@@ -18,7 +18,7 @@ const App = {
             const header = document.createElement('div');
             header.className = 'header';
             const html = `
-            <h2>simpledash v.0.1 - Cluster: ${App.simpledashContext.ClusterName}</h2>
+            <h2>simpledash - Cluster: ${App.simpledashContext.ClusterName}</h2>
             <input id="nsfilter" placeholder="filter on namespace">
             `
             header.innerHTML = html;
