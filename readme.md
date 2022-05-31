@@ -1,6 +1,6 @@
 # simpledash
 
-a simple, read-only, dashboard for your k8s cluster. **early days**.
+a simple, read-only, dashboard for your k8s cluster.
 
 ``skaffold run``  
   
