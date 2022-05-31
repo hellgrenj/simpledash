@@ -1,4 +1,5 @@
 import { connectAndConsume } from "./ws.js";
+import { saveToClipboard } from "./helper.js";
 const App = {
     element: document.getElementById('app'),
     simpledashContext: {},
@@ -45,7 +46,7 @@ const App = {
             const node = document.createElement('div');
             node.className = 'node';
             node.style = `grid-column: ${nodeIndex};`;
-            node.innerHTML = `<div><span>${timeString}</span><h2>${nodeKey}</h2>(hover over pod to see image)<br/></div>`;
+            node.innerHTML = `<div><span>${timeString}</span><h2>${nodeKey}</h2>(click on tag to copy to clipboard)<br/></div>`;
             return node;
         },
         clearNodes: () => {
@@ -75,9 +76,9 @@ const App = {
             const imageParts = pod.Image.split(':');
             const html = `
             ${pod.Name}<br/>
-            <i>${pod.Namespace}</i><br/>
-            <b>tag: ${imageParts[imageParts.length - 1]}</b>
-         `
+            <i>namespace: ${pod.Namespace}</i><br/>
+            <span class='tag'>tag: ${imageParts[imageParts.length - 1]}</span>
+            `
             podElement.innerHTML = html;
             podElement.title = pod.Image;
             return podElement;
@@ -100,13 +101,21 @@ const App = {
             }
             ingressElement.innerHTML = ingressHtml;
         },
+        wireClusterInfoEvents: () => {
+            document.querySelectorAll('.tag').forEach(tag => {
+                tag.addEventListener('click', event => {
+                    saveToClipboard(event.target.textContent.split('tag: ')[1]);
+                });
+            });
+        },
         renderClusterInfo: (timeString) => {
             App.$.clearNodes();
-            Object.keys(App.state.clusterInfo.Nodes).forEach(async (key, nodeIndex) => {
+            Object.keys(App.state.clusterInfo.Nodes).sort().forEach(async (key, nodeIndex) => {
                 const nodeElement = App.$.createNode(key, nodeIndex, timeString);
                 App.$.renderNode(nodeElement, key);
                 App.$.renderIngress();
                 App.element.appendChild(nodeElement);
+                App.$.wireClusterInfoEvents();
             })
         }
     },
