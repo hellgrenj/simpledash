@@ -45,7 +45,7 @@ const App = {
         createNode: (nodeKey, nodeIndex, timeString) => {
             const node = document.createElement('div');
             node.className = 'node';
-            node.style = `grid-column: ${nodeIndex};`;
+            node.style = `grid-column: ${nodeIndex + 1};`;
             node.innerHTML = `<div><span>${timeString}</span><h2>${nodeKey}</h2>(click on tag to copy to clipboard)<br/></div>`;
             return node;
         },
