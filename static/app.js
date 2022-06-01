@@ -34,6 +34,14 @@ const App = {
             ingress.className = 'ingress';
             App.element.appendChild(ingress);
         },
+        renderNamespaces: () => {
+            const namespaces = document.createElement('div');
+            namespaces.className = 'namespaces';
+            let html = 'Namespaces: <br/>'
+            App.simpledashContext.Namespaces.forEach(ns => html = `${html}<br/>${ns}`);
+            namespaces.innerHTML = html;
+            App.element.appendChild(namespaces);
+        },
         getRandomColor: () => {
             var letters = '0123456789ABCDEF';
             var color = '#';
@@ -123,6 +131,7 @@ const App = {
         await App.$.getContext();
         App.$.renderHeader();
         App.$.addIngressSection();
+        App.$.renderNamespaces();
         connectAndConsume((e) => {
             const clusterInfo = JSON.parse(e.data);
             App.state.clusterInfo = clusterInfo;
