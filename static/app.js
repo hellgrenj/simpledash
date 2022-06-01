@@ -85,7 +85,8 @@ const App = {
             const html = `
             ${pod.Name}<br/>
             <i>namespace: ${pod.Namespace}</i><br/>
-            <span class='tag'>tag: ${imageParts[imageParts.length - 1]}</span>
+            <span class='tag'>tag: ${imageParts[imageParts.length - 1]}</span><br/>
+            status: ${pod.Status}<br/>
             `
             podElement.innerHTML = html;
             podElement.title = pod.Image;
