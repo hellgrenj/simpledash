@@ -77,7 +77,10 @@ func getIngressInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, n
 	}
 
 	for _, item := range ingress.Items {
-		ip := item.Status.LoadBalancer.Ingress[0].Ip
+		ip := ""
+		if len(item.Status.LoadBalancer.Ingress) > 0 {
+			ip = item.Status.LoadBalancer.Ingress[0].Ip
+		}
 		for _, rule := range item.Spec.Rules {
 			if rule.Host == "" {
 				return
