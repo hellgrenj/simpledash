@@ -4,7 +4,7 @@ a simple, read-only, dashboard for your k8s cluster.
 
 ![screenshot](screenshot.png)
 
-### install (*early days*)
+### install
 ``kubectl apply -f https://raw.githubusercontent.com/hellgrenj/simpledash/main/deploy/v0.1/simpledash-with-ingress.yaml``  
 
 or download the yaml above and tweak things like: 
