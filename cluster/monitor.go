@@ -20,18 +20,22 @@ func StartMonitor(clusterInfoChan chan<- ClusterInfo) {
 			Nodes: make(NodeInfo),
 		}
 		sc := c.GetContext()
-		for _, namespace := range sc.Namespaces {
-			getPodsByNamespace(clientset, &clusterInfo, namespace)
-			getIngressInfo(clientset, &clusterInfo, namespace)
-		}
+		addClusterInfo(clientset, &clusterInfo, sc)
 		clusterInfoChan <- clusterInfo
 		time.Sleep(time.Second * 10)
 	}
 }
-func getPodsByNamespace(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, namespace string) {
+func addClusterInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, sc c.SimpledashContext) {
+	for _, namespace := range sc.Namespaces {
+		addPodsInfo(clientset, clusterInfo, namespace)
+		addIngressInfo(clientset, clusterInfo, namespace)
+	}
+}
+func addPodsInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, namespace string) {
 	pods, err := clientset.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		log.Fatal(err.Error())
+		return
 	}
 	for p := range pods.Items {
 
@@ -44,25 +48,7 @@ func getPodsByNamespace(clientset *kubernetes.Clientset, clusterInfo *ClusterInf
 		clusterInfo.Nodes[pods.Items[p].Spec.NodeName] = append(clusterInfo.Nodes[pods.Items[p].Spec.NodeName], podInfo)
 	}
 }
-
-type Ingress struct {
-	Items []struct {
-		Spec struct {
-			Rules []struct {
-				Host string
-			}
-		}
-		Status struct {
-			LoadBalancer struct {
-				Ingress []struct {
-					Ip string
-				}
-			}
-		}
-	}
-}
-
-func getIngressInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, namespace string) {
+func addIngressInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, namespace string) {
 	ingresses := clientset.CoreV1().RESTClient().Get().AbsPath(fmt.Sprintf("/apis/networking.k8s.io/v1/namespaces/%s/ingresses", namespace)).Do(context.TODO())
 	ingressInfo, err := ingresses.Raw()
 	if err != nil {
@@ -77,10 +63,7 @@ func getIngressInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, n
 	}
 
 	for _, item := range ingress.Items {
-		ip := ""
-		if len(item.Status.LoadBalancer.Ingress) > 0 {
-			ip = item.Status.LoadBalancer.Ingress[0].Ip
-		}
+		ip := getIpsFromItem(item)
 		for _, rule := range item.Spec.Rules {
 			if rule.Host == "" {
 				return
@@ -92,6 +75,18 @@ func getIngressInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, n
 			clusterInfo.Ingresses = append(clusterInfo.Ingresses, ingressInfo)
 		}
 	}
+}
+func getIpsFromItem(item Item) string {
+	ip := ""
+	if len(item.Status.LoadBalancer.Ingress) > 0 {
+		for i, ingress := range item.Status.LoadBalancer.Ingress {
+			ip += ingress.Ip
+			if len(item.Status.LoadBalancer.Ingress) > i+1 {
+				ip += ", "
+			}
+		}
+	}
+	return ip
 }
 
 func connectk8s() *kubernetes.Clientset {

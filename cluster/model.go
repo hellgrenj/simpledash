@@ -15,3 +15,20 @@ type ClusterInfo struct {
 	Nodes     NodeInfo
 	Ingresses []IngressInfo
 }
+type Ingress struct {
+	Items []Item
+}
+type Item struct {
+	Spec struct {
+		Rules []struct {
+			Host string
+		}
+	}
+	Status struct {
+		LoadBalancer struct {
+			Ingress []struct {
+				Ip string
+			}
+		}
+	}
+}
