@@ -15,21 +15,22 @@ import (
 
 func StartMonitor(clusterInfoChan chan<- ClusterInfo) {
 	clientset := connectk8s()
+	sc := c.GetContext()
 	for {
-		clusterInfo := ClusterInfo{
-			Nodes: make(NodeInfo),
-		}
-		sc := c.GetContext()
-		addClusterInfo(clientset, &clusterInfo, sc)
+		clusterInfo := scan(clientset, sc)
 		clusterInfoChan <- clusterInfo
 		time.Sleep(time.Second * 10)
 	}
 }
-func addClusterInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, sc c.SimpledashContext) {
-	for _, namespace := range sc.Namespaces {
-		addPodsInfo(clientset, clusterInfo, namespace)
-		addIngressInfo(clientset, clusterInfo, namespace)
+func scan(clientset *kubernetes.Clientset, sc c.SimpledashContext) ClusterInfo {
+	clusterInfo := ClusterInfo{
+		Nodes: make(NodeInfo),
 	}
+	for _, namespace := range sc.Namespaces {
+		addPodsInfo(clientset, &clusterInfo, namespace)
+		addIngressInfo(clientset, &clusterInfo, namespace)
+	}
+	return clusterInfo
 }
 func addPodsInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, namespace string) {
 	pods, err := clientset.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
@@ -49,8 +50,8 @@ func addPodsInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, name
 	}
 }
 func addIngressInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, namespace string) {
-	ingresses := clientset.CoreV1().RESTClient().Get().AbsPath(fmt.Sprintf("/apis/networking.k8s.io/v1/namespaces/%s/ingresses", namespace)).Do(context.TODO())
-	ingressInfo, err := ingresses.Raw()
+	result := clientset.CoreV1().RESTClient().Get().AbsPath(fmt.Sprintf("/apis/networking.k8s.io/v1/namespaces/%s/ingresses", namespace)).Do(context.TODO())
+	ingressInfo, err := result.Raw()
 	if err != nil {
 		log.Println(err)
 		return
