@@ -64,30 +64,30 @@ func addIngressInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, n
 	}
 
 	for _, item := range ingress.Items {
-		ip := getIpsFromItem(item)
+		ipStr := getIpStrFromItem(item)
 		for _, rule := range item.Spec.Rules {
 			if rule.Host == "" {
 				return
 			}
 			ingressInfo := IngressInfo{
 				Endpoint: rule.Host,
-				Ip:       ip,
+				Ip:       ipStr,
 			}
 			clusterInfo.Ingresses = append(clusterInfo.Ingresses, ingressInfo)
 		}
 	}
 }
-func getIpsFromItem(item Item) string {
-	ip := ""
+func getIpStrFromItem(item Item) string {
+	ipStr := ""
 	if len(item.Status.LoadBalancer.Ingress) > 0 {
 		for i, ingress := range item.Status.LoadBalancer.Ingress {
-			ip += ingress.Ip
+			ipStr += ingress.Ip
 			if len(item.Status.LoadBalancer.Ingress) > i+1 {
-				ip += ", "
+				ipStr += ", "
 			}
 		}
 	}
-	return ip
+	return ipStr
 }
 
 func connectk8s() *kubernetes.Clientset {
