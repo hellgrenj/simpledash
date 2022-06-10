@@ -70,8 +70,9 @@ func addIngressInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, n
 				return
 			}
 			ingressInfo := IngressInfo{
-				Endpoint: rule.Host,
-				Ip:       ipStr,
+				Endpoint:  rule.Host,
+				Ip:        ipStr,
+				Namespace: namespace,
 			}
 			clusterInfo.Ingresses = append(clusterInfo.Ingresses, ingressInfo)
 		}

@@ -7,8 +7,9 @@ type PodInfo struct {
 	Status    string
 }
 type IngressInfo struct {
-	Endpoint string
-	Ip       string
+	Endpoint  string
+	Ip        string
+	Namespace string
 }
 type NodeInfo map[string][]PodInfo
 type ClusterInfo struct {

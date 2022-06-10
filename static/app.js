@@ -105,6 +105,9 @@ const App = {
             let ingressHtml = 'Endpoints: <br/>';
             if (App.state.clusterInfo.Ingresses) {
                 App.state.clusterInfo.Ingresses.forEach(ingress => {
+                    if (App.state.nsfilter !== '' && !ingress.Namespace.startsWith(App.state.nsfilter)) {
+                        return;
+                    }
                     ingressHtml = `${ingressHtml} <br/> ${ingress.Endpoint} (${ingress.Ip})`;
                 });
             }
