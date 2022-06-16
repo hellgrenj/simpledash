@@ -42,7 +42,10 @@ func (h *Hub) run() {
 		case clusterInfo := <-h.clusterInfo:
 			h.latestInfo = &clusterInfo
 			for c := range h.connections {
-				c.WriteJSON(clusterInfo)
+				err := c.WriteJSON(clusterInfo)
+				if err != nil {
+					log.Printf("Error writing clusterInfo to websocket: %v", err)
+				}
 			}
 		}
 	}
