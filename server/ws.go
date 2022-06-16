@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/hellgrenj/simpledash/cluster"
 )
 
 var upgrader = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
@@ -19,9 +18,7 @@ const (
 	pingPeriod = (pongWait * 9) / 10
 )
 
-var connections = map[*websocket.Conn]bool{}
-
-func connect(w http.ResponseWriter, r *http.Request) {
+func connect(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("upgrade:", err)
@@ -30,7 +27,6 @@ func connect(w http.ResponseWriter, r *http.Request) {
 	c.SetReadLimit(512)
 	c.SetReadDeadline(time.Now().Add(pongWait))
 	c.SetPongHandler(func(string) error { c.SetReadDeadline(time.Now().Add(pongWait)); return nil })
-	connections[c] = true
 	go func() { // write pings to client..
 		pingTicker := time.NewTicker(pingPeriod)
 		for range pingTicker.C {
@@ -46,19 +42,10 @@ func connect(w http.ResponseWriter, r *http.Request) {
 			_, _, err := c.ReadMessage()
 			if err != nil {
 				log.Printf("removing connection %v. Pong failed with error %v", c.RemoteAddr(), err)
-				delete(connections, c)
-				c.Close()
+				hub.unregister <- c
 				break
 			}
 		}
 	}()
-}
-
-func publishEventsToWsConnections(clusterInfoChan <-chan cluster.ClusterInfo) {
-	for {
-		clusterInfo := <-clusterInfoChan
-		for c := range connections {
-			c.WriteJSON(clusterInfo)
-		}
-	}
+	hub.register <- c
 }

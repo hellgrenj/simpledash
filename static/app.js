@@ -24,6 +24,12 @@ const App = {
             header.innerHTML = html;
             App.element.appendChild(header);
             const nsfilterInput = document.getElementById("nsfilter");
+            const params = new URLSearchParams(window.location.search)
+            if (params.has('ns')) {
+                const initNamespace = params.get('ns');
+                App.state.nsfilter = initNamespace;
+                nsfilterInput.value = initNamespace;
+            }
             nsfilterInput.addEventListener('keyup', () => {
                 App.state.nsfilter = nsfilterInput.value;
                 App.$.renderClusterInfo(App.state.latestTimeStamp);
