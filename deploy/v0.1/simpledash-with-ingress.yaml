@@ -102,7 +102,7 @@ spec:
     spec:
       serviceAccountName: simpledash-sa
       containers:
-        - image: hellgrenj/simpledash:v0.1.25
+        - image: hellgrenj/simpledash:v0.1.26
           name: simpledash
           env:
           - name: "SIMPLEDASH_NAMESPACES"

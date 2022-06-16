@@ -33,12 +33,12 @@ func (h *Hub) run() {
 				log.Println("flushing latest info to new connection")
 				connection.WriteJSON(h.latestInfo)
 			}
-			log.Printf("number of connection %v", len(h.connections))
+			log.Printf("number of connections %v", len(h.connections))
 		case connection := <-h.unregister:
 			delete(h.connections, connection)
 			connection.Close()
 			log.Println("removed connection")
-			log.Printf("number of connection %v", len(h.connections))
+			log.Printf("number of connections %v", len(h.connections))
 		case clusterInfo := <-h.clusterInfo:
 			h.latestInfo = &clusterInfo
 			for c := range h.connections {
