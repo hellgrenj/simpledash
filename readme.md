@@ -7,7 +7,7 @@ a simple, read-only, dashboard for your k8s cluster.
 
 
 ### try locally with skaffold 
-1. install [skaffold](https://skaffold.dev/) (follow the quickstart guide: https://skaffold.dev/docs/quickstart/)
+1. install [skaffold](https://skaffold.dev/)
 2. run ``skaffold run``  
 3. in your browser navigate to ```localhost:1337```
 4. review the default settings in ```./simpledash.yaml``` - e.g the namespaces being included in the setting ```SIMPLEDASH_NAMESPACES```:
