@@ -25,7 +25,7 @@ and more...
 
 ### so, what am I looking at?
 
-Simpledash will scan your cluster every 10 seconds and push the cluster information over websockets to your browser. In the header you simple see "simpledash" and the name you set in the env variable ```SIMPLEDASH_CLUSTERNAME``` (see ./simpledash.yaml). In the top left corner you have a namespace filter option, this will dictate what is being presented below. You can also pass in an inital filter by using the ns query paramter, i.e ```localhost:1337?ns=simpledash```  
+Simpledash will scan your cluster every 10 seconds and push the cluster information over websockets to your browser. In the header you see "simpledash" and the name you set in the env variable ```SIMPLEDASH_CLUSTERNAME``` (see ./simpledash.yaml). In the top left corner you have a namespace filter option, this will dictate what is being presented below. You can also pass in an inital filter by using the ns query paramter, i.e ```localhost:1337?ns=simpledash```  
 
 On the next row you can see any exposed ingress endpoints (per namespace) and the namespaces being monitored. Below this you can see the pods in your cluster and the nodes they live in. Each node has a timestamp in the upper-left corner so you can see how fresh the status/data is that you are looking at.
 
