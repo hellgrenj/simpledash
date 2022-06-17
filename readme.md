@@ -35,7 +35,7 @@ Each pod displays the:
 - tag
 - status 
 
-*..and if you hover the pod you can see the image name*  
+*..and if you hover over the pod you can see the image name*  
 
 pods with status Running will have a green background.  
 pods with status Failed will have a red background.  
