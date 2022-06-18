@@ -145,7 +145,7 @@ const App = {
         connectAndConsume((e) => {
             const clusterInfo = JSON.parse(e.data);
             App.state.clusterInfo = clusterInfo;
-            App.state.latestTimeStamp = new Date().toLocaleTimeString();
+            App.state.latestTimeStamp = new Date(clusterInfo.Timestamp).toLocaleTimeString();
             App.$.renderClusterInfo(App.state.latestTimeStamp);
         });
     }

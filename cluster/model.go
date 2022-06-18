@@ -15,6 +15,7 @@ type NodeInfo map[string][]PodInfo
 type ClusterInfo struct {
 	Nodes     NodeInfo
 	Ingresses []IngressInfo
+	Timestamp string
 }
 type Ingress struct {
 	Items []Item

@@ -24,7 +24,8 @@ func StartMonitor(clusterInfoChan chan<- ClusterInfo) {
 }
 func scan(clientset *kubernetes.Clientset, sc c.SimpledashContext) ClusterInfo {
 	clusterInfo := ClusterInfo{
-		Nodes: make(NodeInfo),
+		Nodes:     make(NodeInfo),
+		Timestamp: time.Now().UTC().String(),
 	}
 	for _, namespace := range sc.Namespaces {
 		addPodsInfo(clientset, &clusterInfo, namespace)
