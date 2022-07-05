@@ -1,9 +1,17 @@
-body {
-    background-color: rgb(62, 60, 60);
-    color: #fff;
+:root {
     font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.87);
+    background-color: #242424;
+    color-scheme: light dark;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
 }
-
 
 #app {
     display: grid;
@@ -13,10 +21,10 @@ body {
 }
 
 .header {
-    border: 2px solid #000;
+
     grid-column: 1/6;
     grid-row: 1;
-    background-color: rgb(62, 60, 60);
+
     color: #fff;
     font-size: 1.5em;
     font-weight: bold;
@@ -25,20 +33,23 @@ body {
 }
 
 .ingress {
-    border: 2px solid #000;
+
     grid-column: 1;
     grid-row: 2;
-    background-color: rgb(62, 60, 60);
+
     color: #fff;
     font-weight: bold;
     text-align: left;
     padding: 10px;
+    border-bottom: 1px solid black;
 }
+
 .namespaces {
-    border: 2px solid #000;
+
     grid-column: 2/6;
     grid-row: 2;
-    background-color: rgb(62, 60, 60);
+    border-bottom: 1px solid black;
+    border-left: 1px solid black;
     color: #fff;
     font-weight: bold;
     text-align: left;
@@ -48,7 +59,7 @@ body {
 .node {
     grid-row: 3;
     padding: 10px;
-    border: 2px solid black;
+    border-right: 1px solid black;
 }
 
 .pod {
@@ -58,6 +69,7 @@ body {
     max-width: 400px;
     cursor: pointer;
 }
+
 .tag {
     font-weight: 800;
     border: thin #000 solid;
