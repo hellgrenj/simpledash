@@ -11,11 +11,18 @@ type IngressInfo struct {
 	Ip        string
 	Namespace string
 }
+type DeploymentInfo struct {
+	Namespace     string
+	Name          string
+	Replicas      int32
+	ReadyReplicas int32
+}
 type NodeInfo map[string][]PodInfo
 type ClusterInfo struct {
-	Nodes     NodeInfo
-	Ingresses []IngressInfo
-	Timestamp string
+	Nodes       NodeInfo
+	Ingresses   []IngressInfo
+	Deployments []DeploymentInfo
+	Timestamp   string
 }
 type Ingress struct {
 	Items []Item

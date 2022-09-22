@@ -30,6 +30,7 @@ func scan(clientset *kubernetes.Clientset, sc c.SimpledashContext) ClusterInfo {
 	for _, namespace := range sc.Namespaces {
 		addPodsInfo(clientset, &clusterInfo, namespace)
 		addIngressInfo(clientset, &clusterInfo, namespace)
+		addDeploymentsInfo(clientset, &clusterInfo, namespace)
 	}
 	return clusterInfo
 }
@@ -48,6 +49,22 @@ func addPodsInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, name
 			Status:    string(pods.Items[p].Status.Phase),
 		}
 		clusterInfo.Nodes[pods.Items[p].Spec.NodeName] = append(clusterInfo.Nodes[pods.Items[p].Spec.NodeName], podInfo)
+	}
+}
+func addDeploymentsInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, namespace string) {
+	deployments, err := clientset.AppsV1().Deployments(namespace).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		log.Fatal(err.Error())
+		return
+	}
+	for d := range deployments.Items {
+		deploymentInfo := DeploymentInfo{
+			Namespace:     deployments.Items[d].Namespace,
+			Name:          deployments.Items[d].Name,
+			Replicas:      deployments.Items[d].Status.Replicas,
+			ReadyReplicas: deployments.Items[d].Status.ReadyReplicas,
+		}
+		clusterInfo.Deployments = append(clusterInfo.Deployments, deploymentInfo)
 	}
 }
 func addIngressInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, namespace string) {

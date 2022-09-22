@@ -7,8 +7,12 @@ import (
 )
 
 type SimpledashContext struct {
-	ClusterName string
-	Namespaces  []string
+	ClusterName               string
+	Namespaces                []string
+	PodLogsLinkEnabled        bool
+	PodLogsLink               string
+	DeploymentLogsLinkEnabled bool
+	DeploymentLogsLink        string
 }
 
 func GetContext() SimpledashContext {
@@ -24,6 +28,10 @@ func GetContext() SimpledashContext {
 		log.Println("checking all namespaces...")
 		namespaces = []string{""}
 	}
-	sc := SimpledashContext{ClusterName: clusterName, Namespaces: namespaces}
+	podLogsLinkEnabled := os.Getenv("POD_LOGS_LINK_ENABLED") == "true"
+	podLogsLink := os.Getenv("POD_LOGS_LINK")
+	deploymentLogsLinkEnabled := os.Getenv("DEPLOYMENT_LOGS_LINK_ENABLED") == "true"
+	deploymentLogsLink := os.Getenv("DEPLOYMENT_LOGS_LINK")
+	sc := SimpledashContext{ClusterName: clusterName, Namespaces: namespaces, PodLogsLinkEnabled: podLogsLinkEnabled, PodLogsLink: podLogsLink, DeploymentLogsLinkEnabled: deploymentLogsLinkEnabled, DeploymentLogsLink: deploymentLogsLink}
 	return sc
 }

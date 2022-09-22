@@ -43,9 +43,9 @@
     padding: 10px;
 }
 
-.namespaces {
+.deployments {
 
-    grid-column: 2/6;
+    grid-column: 2;
     grid-row: 2;
 
     color: #fff;
@@ -53,6 +53,18 @@
     text-align: left;
     padding: 10px;
 }
+.namespaces {
+
+    grid-column: 3;
+    grid-row: 2;
+
+    color: #fff;
+    
+    text-align: left;
+    padding: 10px;
+}
+
+
 
 .node {
     grid-row: 3;
@@ -71,4 +83,19 @@
     font-weight: 800;
     border: thin #000 solid;
     cursor: pointer;
+}
+.podLogsLink {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+    font-weight:bold;
+    border: thin #000 dashed;
+}
+
+.deploymentLogsLink {
+    color: #fff;
+    text-decoration: none;
+    cursor: pointer;
+    font-weight:bold;
+    border: thin #fff dashed;
 }

@@ -42,6 +42,9 @@ rules:
 - apiGroups: [""] 
   resources: ["pods", "nodes", "services", "namespaces", "ingresses",  "ingresses/endpoints"]
   verbs: ["get", "watch", "list"]
+- apiGroups: ["apps"] 
+  resources: ["deployments"]
+  verbs: ["get", "watch", "list"]
 - apiGroups:
   - networking.k8s.io
   resources:
@@ -102,13 +105,21 @@ spec:
     spec:
       serviceAccountName: simpledash-sa
       containers:
-        - image: hellgrenj/simpledash:v0.1.32
+        - image: hellgrenj/simpledash:v0.1.33
           name: simpledash
           env:
           - name: "SIMPLEDASH_NAMESPACES"
             value: '["default","simpledash"]'
           - name: "SIMPLEDASH_CLUSTERNAME"
             value: 'MyCluster'
+          - name: "POD_LOGS_LINK_ENABLED"
+            value: 'true'
+          - name: "POD_LOGS_LINK"
+            value: 'http://link-to-kibana-or-similiar'
+          - name: "DEPLOYMENT_LOGS_LINK_ENABLED"
+            value: 'true'
+          - name: "DEPLOYMENT_LOGS_LINK"
+            value: 'http://link-to-kibana-or-similiar'
           ports:
           - containerPort: 1337
           resources: {}

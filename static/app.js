@@ -1,5 +1,6 @@
 import { connectAndConsume } from "./ws.js";
-import { saveToClipboard } from "./helper.js";
+import { saveToClipboard, getRandomColor } from "./helper.js";
+
 const App = {
     element: document.getElementById('app'),
     simpledashContext: {},
@@ -10,10 +11,6 @@ const App = {
         latestTimeStamp: '',
     },
     $: {
-        getContext: async () => {
-            const response = await fetch('/context');
-            App.simpledashContext = await response.json();
-        },
         renderHeader: () => {
             const header = document.createElement('div');
             header.className = 'header';
@@ -40,21 +37,18 @@ const App = {
             ingress.className = 'ingress';
             App.element.appendChild(ingress);
         },
+        addDeploymentsSection: () => {
+            const deployments = document.createElement('div');
+            deployments.className = 'deployments';
+            App.element.appendChild(deployments);
+        },
         renderNamespaces: () => {
             const namespaces = document.createElement('div');
             namespaces.className = 'namespaces';
             let html = 'Namespaces: <br/>'
-            App.simpledashContext.Namespaces.forEach(ns => html = `${html}<br/>${ns}`);
+            App.simpledashContext.Namespaces.forEach(ns => html = `${html}<br/><span style="background-color:#000; padding:2px; color: ${App.getColorByNamespace(ns)}">${ns}</span>`);
             namespaces.innerHTML = html;
             App.element.appendChild(namespaces);
-        },
-        getRandomColor: () => {
-            var letters = '0123456789ABCDEF';
-            var color = '#';
-            for (var i = 0; i < 6; i++) {
-                color += letters[Math.floor(Math.random() * 16)];
-            }
-            return color;
         },
         createNode: (nodeKey, nodeIndex, timeString) => {
             const node = document.createElement('div');
@@ -81,19 +75,20 @@ const App = {
             } else {
                 podBgColor = "rgb(202, 202, 110)"
             }
+
             const podElement = document.createElement('div');
-            if (App.state.namespaceColors[pod.Namespace] === undefined) {
-                App.state.namespaceColors[pod.Namespace] = App.$.getRandomColor();
-            }
             podElement.className = 'pod';
-            podElement.style = `background-color: ${podBgColor}; border: 4px solid ${App.state.namespaceColors[pod.Namespace]};`;
+            podElement.style = `background-color: ${podBgColor}; border: 4px solid ${App.getColorByNamespace(pod.Namespace)};`;
             const imageParts = pod.Image.split(':');
-            const html = `
+            let html = `
             ${pod.Name}<br/>
             <i>namespace: ${pod.Namespace}</i><br/>
             <span class='tag'>tag: ${imageParts[imageParts.length - 1]}</span><br/>
-            status: ${pod.Status}<br/>
-            `
+            status: ${pod.Status}<br/>`
+            if (App.simpledashContext.PodLogsLinkEnabled) {
+                const podLogsLink = App.simpledashContext.PodLogsLink.replace("PODNAME_PLACEHOLDER", pod.Name);
+                html = `${html}<a class="podLogsLink" href="${podLogsLink}" target="_blank">view logs</a>`
+            }
             podElement.innerHTML = html;
             podElement.title = pod.Image;
             return podElement;
@@ -114,10 +109,27 @@ const App = {
                     if (App.state.nsfilter !== '' && !ingress.Namespace.startsWith(App.state.nsfilter)) {
                         return;
                     }
-                    ingressHtml = `${ingressHtml} <br/> ${ingress.Endpoint} (${ingress.Ip})`;
+                    ingressHtml = `${ingressHtml} <br/><span style="background-color:#000; padding:2px; color: ${App.getColorByNamespace(ingress.Namespace)}; padding: 2px;"> ${ingress.Endpoint} (${ingress.Ip})</span>`;
                 });
             }
             ingressElement.innerHTML = ingressHtml;
+        },
+        renderDeployments: () => {
+            const deploymentsElement = document.getElementsByClassName('deployments')[0];
+            let deploymentsHtml = 'Deployments: <br/>';
+            if (App.state.clusterInfo.Deployments) {
+                App.state.clusterInfo.Deployments.forEach(deployment => {
+                    if (App.state.nsfilter !== '' && !deployment.Namespace.startsWith(App.state.nsfilter)) {
+                        return;
+                    }
+                    deploymentsHtml = `${deploymentsHtml} <br/> <span style="background-color:#000; padding:2px; color: ${App.getColorByNamespace(deployment.Namespace)}; padding: 2px;">${deployment.Name} (ready: ${deployment.ReadyReplicas}/${deployment.Replicas})`;
+                    if (App.simpledashContext.DeploymentLogsLinkEnabled) {
+                        const deploymentLogsLink = App.simpledashContext.DeploymentLogsLink.replace("DEPLOYMENT_NAME_PLACEHOLDER", deployment.Name).replace("DEPLOYMENT_NAMESPACE_PLACEHOLDER", deployment.Namespace);
+                        deploymentsHtml = `${deploymentsHtml} <a class="deploymentLogsLink" href="${deploymentLogsLink}" target="_blank">view logs</a>`;
+                    }
+                });
+            }
+            deploymentsElement.innerHTML = deploymentsHtml;
         },
         wireClusterInfoEvents: () => {
             document.querySelectorAll('.tag').forEach(tag => {
@@ -128,6 +140,7 @@ const App = {
         },
         renderClusterInfo: (timeString) => {
             App.$.clearNodes();
+            App.$.renderDeployments();
             Object.keys(App.state.clusterInfo.Nodes).sort().forEach(async (key, nodeIndex) => {
                 const nodeElement = App.$.createNode(key, nodeIndex, timeString);
                 App.$.renderNode(nodeElement, key);
@@ -137,10 +150,21 @@ const App = {
             })
         }
     },
+    getContext: async () => {
+        const response = await fetch('/context');
+        App.simpledashContext = await response.json();
+    },
+    getColorByNamespace: (ns) => {
+        if (App.state.namespaceColors[ns] === undefined) {
+            App.state.namespaceColors[ns] = getRandomColor();
+        }
+        return App.state.namespaceColors[ns];
+    },
     init: async () => {
-        await App.$.getContext();
+        await App.getContext();
         App.$.renderHeader();
         App.$.addIngressSection();
+        App.$.addDeploymentsSection();
         App.$.renderNamespaces();
         connectAndConsume((e) => {
             const clusterInfo = JSON.parse(e.data);
