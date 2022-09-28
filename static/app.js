@@ -1,5 +1,5 @@
 import { connectAndConsume } from "./ws.js";
-import { saveToClipboard, getRandomColor } from "./helper.js";
+import { saveToClipboard, stringToColour } from "./helper.js";
 
 const App = {
     element: document.getElementById('app'),
@@ -156,7 +156,7 @@ const App = {
     },
     getColorByNamespace: (ns) => {
         if (App.state.namespaceColors[ns] === undefined) {
-            App.state.namespaceColors[ns] = getRandomColor();
+            App.state.namespaceColors[ns] = stringToColour(ns);
         }
         return App.state.namespaceColors[ns];
     },
