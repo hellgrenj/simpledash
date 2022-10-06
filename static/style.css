@@ -38,7 +38,7 @@
     grid-row: 2;
 
     color: #fff;
-    
+
     text-align: left;
     padding: 10px;
 }
@@ -49,17 +49,18 @@
     grid-row: 2;
 
     color: #fff;
-    
+
     text-align: left;
     padding: 10px;
 }
+
 .namespaces {
 
     grid-column: 3;
     grid-row: 2;
 
     color: #fff;
-    
+
     text-align: left;
     padding: 10px;
 }
@@ -84,11 +85,12 @@
     border: thin #000 solid;
     cursor: pointer;
 }
+
 .podLogsLink {
     color: #000;
     text-decoration: none;
     cursor: pointer;
-    font-weight:bold;
+    font-weight: bold;
     border: thin #000 dashed;
 }
 
@@ -96,6 +98,15 @@
     color: #fff;
     text-decoration: none;
     cursor: pointer;
-    font-weight:bold;
+    font-weight: bold;
     border: thin #fff dashed;
+}
+
+.endpointLink {
+    text-decoration: none;
+    background-color:#000; padding:2px; 
+    padding: 2px; text-decoration:none;    
+}
+a.endpointLink:hover {
+    text-decoration: underline;
 }

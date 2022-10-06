@@ -109,7 +109,7 @@ const App = {
                     if (App.state.nsfilter !== '' && !ingress.Namespace.startsWith(App.state.nsfilter)) {
                         return;
                     }
-                    ingressHtml = `${ingressHtml} <br/><span style="background-color:#000; padding:2px; color: ${App.getColorByNamespace(ingress.Namespace)}; padding: 2px;"> ${ingress.Endpoint} (${ingress.Ip})</span>`;
+                    ingressHtml = `${ingressHtml} <br/><a class="endpointLink" href="https://${ingress.Endpoint}" target="_blank" style="color: ${App.getColorByNamespace(ingress.Namespace)};"> ${ingress.Endpoint} (${ingress.Ip})</a>`;
                 });
             }
             ingressElement.innerHTML = ingressHtml;
