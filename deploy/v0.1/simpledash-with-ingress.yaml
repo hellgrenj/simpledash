@@ -79,7 +79,7 @@ spec:
     - name: "simpledash"
       port: 1337
       targetPort: 1337
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: simpledash
 status:
