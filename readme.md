@@ -15,7 +15,7 @@ a simple, read-only, dashboard for your solutions running on k8s
 ![settings](settings-sh.png)
 
 ### install in your k8s cluster
-``kubectl apply -f https://raw.githubusercontent.com/hellgrenj/simpledash/main/deploy/v0.1/simpledash-with-ingress.yaml``  
+``kubectl apply -f https://raw.githubusercontent.com/hellgrenj/simpledash/main/deploy/v0.2/simpledash-with-ingress.yaml``  
 
 But you **probably** want to download the yaml above and tweak things like: 
 * tracked namespaces (deployment env var SIMPLEDASH_NAMESPACES, expecting json array)
