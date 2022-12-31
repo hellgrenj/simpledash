@@ -108,6 +108,8 @@ spec:
         - image: hellgrenj/simpledash:v0.1.35
           name: simpledash
           env:
+          - name: "TIMEZONE"
+            value: 'Europe/Stockholm'
           - name: "SIMPLEDASH_NAMESPACES"
             value: '["default","simpledash"]'
           - name: "SIMPLEDASH_CLUSTERNAME"

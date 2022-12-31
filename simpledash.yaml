@@ -85,6 +85,8 @@ spec:
         - image: simpledash
           name: simpledash
           env:
+          - name: "TIMEZONE"
+            value: 'Europe/Stockholm'
           - name: "SIMPLEDASH_NAMESPACES"
             value: '["simpledash","default"]'
           - name: "SIMPLEDASH_CLUSTERNAME"

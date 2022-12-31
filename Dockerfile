@@ -20,6 +20,7 @@ RUN uglifyjs ./static/helper.js -c -m -o ./static/helper.js
 RUN uglifyjs ./static/ws.js -c -m -o ./static/ws.js
 
 FROM alpine:3.15 as runtime
+RUN apk add --no-cache tzdata
 COPY --from=builder ./app/main main
 COPY --from=builder ./app/static static
 CMD ["./main"]

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	c "github.com/hellgrenj/simpledash/context"
@@ -23,9 +24,16 @@ func StartMonitor(clusterInfoChan chan<- ClusterInfo) {
 	}
 }
 func scan(clientset *kubernetes.Clientset, sc c.SimpledashContext) ClusterInfo {
+	now := time.Now()
+	timeZone := os.Getenv("TIMEZONE")
+	if timeZone == "" {
+		log.Println("failed to fetch TIMEZONE environment variable")
+		timeZone = "Europe/Stockholm"
+	}
+	loc, _ := time.LoadLocation("Europe/Stockholm")
 	clusterInfo := ClusterInfo{
 		Nodes:     make(NodeInfo),
-		Timestamp: time.Now().UTC().String(),
+		Timestamp: now.In(loc).Format("15:04:05"),
 	}
 	for _, namespace := range sc.Namespaces {
 		addPodsInfo(clientset, &clusterInfo, namespace)

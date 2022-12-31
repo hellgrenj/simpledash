@@ -42,11 +42,20 @@ const App = {
             deployments.className = 'deployments';
             App.element.appendChild(deployments);
         },
-        renderNamespaces: () => {
+        addNamespaceSection: () => {
             const namespaces = document.createElement('div');
             namespaces.className = 'namespaces';
-            let html = 'Namespaces: <br/>'
-            App.simpledashContext.Namespaces.forEach(ns => html = `${html}<br/><span style="background-color:#000; padding:2px; color: ${App.getColorByNamespace(ns)}">${ns}</span>`);
+            App.element.appendChild(namespaces);
+        },
+        renderNamespaces: () => {
+            const namespaces = document.getElementsByClassName('namespaces')[0];
+            let html = 'Namespaces: <br/>'  
+            App.simpledashContext.Namespaces.forEach(ns => {
+                if (App.state.nsfilter !== '' && !ns.startsWith(App.state.nsfilter)) {
+                    return;
+                }
+                html = `${html}<br/><span style="background-color:#000; padding:2px; color: ${App.getColorByNamespace(ns)}">${ns}</span>`
+            });
             namespaces.innerHTML = html;
             App.element.appendChild(namespaces);
         },
@@ -141,6 +150,7 @@ const App = {
         renderClusterInfo: (timeString) => {
             App.$.clearNodes();
             App.$.renderDeployments();
+            App.$.renderNamespaces();
             Object.keys(App.state.clusterInfo.Nodes).sort().forEach(async (key, nodeIndex) => {
                 const nodeElement = App.$.createNode(key, nodeIndex, timeString);
                 App.$.renderNode(nodeElement, key);
@@ -165,11 +175,11 @@ const App = {
         App.$.renderHeader();
         App.$.addIngressSection();
         App.$.addDeploymentsSection();
-        App.$.renderNamespaces();
+        App.$.addNamespaceSection();
         connectAndConsume((e) => {
             const clusterInfo = JSON.parse(e.data);
             App.state.clusterInfo = clusterInfo;
-            App.state.latestTimeStamp = new Date(clusterInfo.Timestamp).toLocaleTimeString();
+            App.state.latestTimeStamp = clusterInfo.Timestamp;
             App.$.renderClusterInfo(App.state.latestTimeStamp);
         });
     }
