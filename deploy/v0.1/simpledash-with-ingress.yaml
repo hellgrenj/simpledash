@@ -105,7 +105,7 @@ spec:
     spec:
       serviceAccountName: simpledash-sa
       containers:
-        - image: hellgrenj/simpledash:v0.1.35
+        - image: hellgrenj/simpledash:v0.2.0
           name: simpledash
           env:
           - name: "TIMEZONE"
