@@ -27,10 +27,14 @@ func scan(clientset *kubernetes.Clientset, sc c.SimpledashContext) ClusterInfo {
 	now := time.Now()
 	timeZone := os.Getenv("TIMEZONE")
 	if timeZone == "" {
-		log.Println("failed to fetch TIMEZONE environment variable")
+		log.Println("failed to read TIMEZONE environment variable, using default timezone Europe/Stockholm")
 		timeZone = "Europe/Stockholm"
 	}
-	loc, _ := time.LoadLocation("Europe/Stockholm")
+	loc, err := time.LoadLocation(timeZone)
+	if err != nil {
+		log.Printf("failed to load timezone %s, using default timezone Europe/Stockholm", timeZone)
+		loc, _ = time.LoadLocation("Europe/Stockholm")
+	}
 	clusterInfo := ClusterInfo{
 		Nodes:     make(NodeInfo),
 		Timestamp: now.In(loc).Format("15:04:05"),
