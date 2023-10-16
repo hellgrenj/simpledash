@@ -17,13 +17,14 @@ import (
 func StartMonitor(clusterInfoChan chan<- ClusterInfo) {
 	clientset := connectk8s()
 	sc := c.GetContext()
+
 	for {
 		clusterInfo := scan(clientset, sc)
 		clusterInfoChan <- clusterInfo
-		time.Sleep(time.Second * 10)
+		time.Sleep(time.Second * time.Duration(sc.ScanIntervalInSecondsInSeconds))
 	}
 }
-func scan(clientset *kubernetes.Clientset, sc c.SimpledashContext) ClusterInfo {
+func getCurrentTimeAndLocation() (time.Time, *time.Location) {
 	now := time.Now()
 	timeZone := os.Getenv("TIMEZONE")
 	if timeZone == "" {
@@ -35,16 +36,59 @@ func scan(clientset *kubernetes.Clientset, sc c.SimpledashContext) ClusterInfo {
 		log.Printf("failed to load timezone %s, using default timezone Europe/Stockholm", timeZone)
 		loc, _ = time.LoadLocation("Europe/Stockholm")
 	}
-	clusterInfo := ClusterInfo{
+	return now, loc
+}
+func scan(clientset *kubernetes.Clientset, sc c.SimpledashContext) ClusterInfo {
+	now, loc := getCurrentTimeAndLocation()
+	mainClusterInfo := ClusterInfo{
 		Nodes:     make(NodeInfo),
 		Timestamp: now.In(loc).Format("15:04:05"),
 	}
-	for _, namespace := range sc.Namespaces {
-		addPodsInfo(clientset, &clusterInfo, namespace)
-		addIngressInfo(clientset, &clusterInfo, namespace)
-		addDeploymentsInfo(clientset, &clusterInfo, namespace)
+
+	type ClusterInfoPerNamespace struct {
+		clusterInfo ClusterInfo
+		namespace   string
 	}
-	return clusterInfo
+	// fetch cluster info per namespace in parallel
+	var chans = make([]chan ClusterInfoPerNamespace, len(sc.Namespaces))
+	for i, namespace := range sc.Namespaces {
+		clusterInfo := ClusterInfo{
+			Nodes: make(NodeInfo),
+		}
+		chans[i] = make(chan ClusterInfoPerNamespace)
+		// fire off goroutine to fetch cluster info for this namespace
+		go func(clusterInfoChan chan ClusterInfoPerNamespace, namespace string, clusterInfo ClusterInfo) {
+			// add pods, ingresses and deployments to clusterInfo serially in this goroutine for this namespace
+			addPodsInfo(clientset, &clusterInfo, namespace)
+			addIngressInfo(clientset, &clusterInfo, namespace)
+			addDeploymentsInfo(clientset, &clusterInfo, namespace)
+
+			infoPerNamespace := ClusterInfoPerNamespace{clusterInfo: clusterInfo, namespace: namespace}
+			clusterInfoChan <- infoPerNamespace
+		}(chans[i], namespace, clusterInfo)
+	}
+
+	// merge all ClusterInfoPerNamespace into one mainClusterInfo as they arrive
+	numberOfMergedClusterInfoPerNamespace := 0
+	for _, namespaceInfoChan := range chans {
+		nsi := <-namespaceInfoChan
+		clusterInfo := nsi.clusterInfo
+		namespace := nsi.namespace
+		log.Printf("merging clusterInfo for namespace %s into mainClusterInfo payload\n", namespace)
+		// pods
+		for node, pods := range clusterInfo.Nodes {
+			mainClusterInfo.Nodes[node] = append(mainClusterInfo.Nodes[node], pods...)
+		}
+		// ingresses
+		mainClusterInfo.Ingresses = append(mainClusterInfo.Ingresses, clusterInfo.Ingresses...)
+		// deployments
+		mainClusterInfo.Deployments = append(mainClusterInfo.Deployments, clusterInfo.Deployments...)
+
+		numberOfMergedClusterInfoPerNamespace++
+	}
+	log.Printf("SCAN complete. Merged %d clusterInfo per namespace into mainClusterInfo payload\n", numberOfMergedClusterInfoPerNamespace)
+
+	return mainClusterInfo
 }
 func addPodsInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, namespace string) {
 	pods, err := clientset.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
@@ -52,15 +96,19 @@ func addPodsInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, name
 		log.Fatal(err.Error())
 		return
 	}
-	for p := range pods.Items {
+	for _, pod := range pods.Items {
+		if len(pod.Spec.Containers) == 0 {
+			log.Printf("Pod %s/%s has no containers. Skipping.", pod.Namespace, pod.Name)
+			continue
+		}
 
 		podInfo := PodInfo{
-			Namespace: pods.Items[p].Namespace,
-			Name:      pods.Items[p].Name,
-			Image:     pods.Items[p].Spec.Containers[0].Image,
-			Status:    string(pods.Items[p].Status.Phase),
+			Namespace: pod.Namespace,
+			Name:      pod.Name,
+			Image:     pod.Spec.Containers[0].Image,
+			Status:    string(pod.Status.Phase),
 		}
-		clusterInfo.Nodes[pods.Items[p].Spec.NodeName] = append(clusterInfo.Nodes[pods.Items[p].Spec.NodeName], podInfo)
+		clusterInfo.Nodes[pod.Spec.NodeName] = append(clusterInfo.Nodes[pod.Spec.NodeName], podInfo)
 	}
 }
 func addDeploymentsInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, namespace string) {
@@ -87,7 +135,7 @@ func addIngressInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, n
 		return
 	}
 	var ingress Ingress
-	json.Unmarshal(ingressInfo, &ingress)
+	err = json.Unmarshal(ingressInfo, &ingress)
 	if err != nil {
 		log.Println(err)
 		return
@@ -123,6 +171,8 @@ func getIpStrFromItem(item Item) string {
 
 func connectk8s() *kubernetes.Clientset {
 	config, err := rest.InClusterConfig()
+	config.QPS = 50
+	config.Burst = 150
 	if err != nil {
 		log.Println(err)
 	}

@@ -4,15 +4,17 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"strconv"
 )
 
 type SimpledashContext struct {
-	ClusterName               string
-	Namespaces                []string
-	PodLogsLinkEnabled        bool
-	PodLogsLink               string
-	DeploymentLogsLinkEnabled bool
-	DeploymentLogsLink        string
+	ClusterName                    string
+	Namespaces                     []string
+	PodLogsLinkEnabled             bool
+	PodLogsLink                    string
+	DeploymentLogsLinkEnabled      bool
+	DeploymentLogsLink             string
+	ScanIntervalInSecondsInSeconds int
 }
 
 func GetContext() SimpledashContext {
@@ -32,6 +34,27 @@ func GetContext() SimpledashContext {
 	podLogsLink := os.Getenv("POD_LOGS_LINK")
 	deploymentLogsLinkEnabled := os.Getenv("DEPLOYMENT_LOGS_LINK_ENABLED") == "true"
 	deploymentLogsLink := os.Getenv("DEPLOYMENT_LOGS_LINK")
-	sc := SimpledashContext{ClusterName: clusterName, Namespaces: namespaces, PodLogsLinkEnabled: podLogsLinkEnabled, PodLogsLink: podLogsLink, DeploymentLogsLinkEnabled: deploymentLogsLinkEnabled, DeploymentLogsLink: deploymentLogsLink}
+
+	var scanIntervalInSeconds int
+	scanIntervalInSecondsStr := os.Getenv("SCAN_INTERVAL_IN_SECONDS")
+	if scanIntervalInSecondsStr == "" {
+		log.Println("failed to fetch SCAN_INTERVAL_IN_SECONDS environment variable, defaulting to 10")
+		scanIntervalInSeconds = 10
+	} else {
+		scanIntervalInSeconds, err = strconv.Atoi(scanIntervalInSecondsStr)
+		if err != nil {
+			log.Println("failed to parse SCAN_INTERVAL_IN_SECONDS environment variable as int, defaulting to 10")
+			scanIntervalInSeconds = 10
+		}
+	}
+
+	sc := SimpledashContext{
+		ClusterName:                    clusterName,
+		Namespaces:                     namespaces,
+		PodLogsLinkEnabled:             podLogsLinkEnabled,
+		PodLogsLink:                    podLogsLink,
+		DeploymentLogsLinkEnabled:      deploymentLogsLinkEnabled,
+		DeploymentLogsLink:             deploymentLogsLink,
+		ScanIntervalInSecondsInSeconds: scanIntervalInSeconds}
 	return sc
 }
