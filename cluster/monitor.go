@@ -21,7 +21,7 @@ func StartMonitor(clusterInfoChan chan<- ClusterInfo) {
 	for {
 		clusterInfo := scan(clientset, sc)
 		clusterInfoChan <- clusterInfo
-		time.Sleep(time.Second * time.Duration(sc.ScanIntervalInSecondsInSeconds))
+		time.Sleep(time.Second * time.Duration(sc.ScanIntervalInSeconds))
 	}
 }
 func getCurrentTimeAndLocation() (time.Time, *time.Location) {

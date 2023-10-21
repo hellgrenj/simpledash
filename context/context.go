@@ -8,13 +8,13 @@ import (
 )
 
 type SimpledashContext struct {
-	ClusterName                    string
-	Namespaces                     []string
-	PodLogsLinkEnabled             bool
-	PodLogsLink                    string
-	DeploymentLogsLinkEnabled      bool
-	DeploymentLogsLink             string
-	ScanIntervalInSecondsInSeconds int
+	ClusterName               string
+	Namespaces                []string
+	PodLogsLinkEnabled        bool
+	PodLogsLink               string
+	DeploymentLogsLinkEnabled bool
+	DeploymentLogsLink        string
+	ScanIntervalInSeconds     int
 }
 
 func GetContext() SimpledashContext {
@@ -49,12 +49,12 @@ func GetContext() SimpledashContext {
 	}
 
 	sc := SimpledashContext{
-		ClusterName:                    clusterName,
-		Namespaces:                     namespaces,
-		PodLogsLinkEnabled:             podLogsLinkEnabled,
-		PodLogsLink:                    podLogsLink,
-		DeploymentLogsLinkEnabled:      deploymentLogsLinkEnabled,
-		DeploymentLogsLink:             deploymentLogsLink,
-		ScanIntervalInSecondsInSeconds: scanIntervalInSeconds}
+		ClusterName:               clusterName,
+		Namespaces:                namespaces,
+		PodLogsLinkEnabled:        podLogsLinkEnabled,
+		PodLogsLink:               podLogsLink,
+		DeploymentLogsLinkEnabled: deploymentLogsLinkEnabled,
+		DeploymentLogsLink:        deploymentLogsLink,
+		ScanIntervalInSeconds:     scanIntervalInSeconds}
 	return sc
 }
