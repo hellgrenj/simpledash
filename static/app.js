@@ -9,6 +9,7 @@ const App = {
         clusterInfo: {},
         namespaceColors: {},
         latestTimeStamp: '',
+        hideRunningPods: false,
     },
     $: {
         renderHeader: () => {
@@ -16,7 +17,9 @@ const App = {
             header.className = 'header';
             const html = `
             <h2>simpledash - ${App.simpledashContext.ClusterName}</h2>
-            <input id="nsfilter" placeholder="filter on namespace">
+            <input id="nsfilter" placeholder="filter on namespace"> 
+            <label class="hideRunningPodsCheckBoxLabel" for="hideRunningPods">hide running pods</label>
+            <input type="checkbox" id="hideRunningPods" name="hideRunningPods" value="hideRunningPods">
             `
             header.innerHTML = html;
             App.element.appendChild(header);
@@ -31,6 +34,21 @@ const App = {
                 App.state.nsfilter = nsfilterInput.value;
                 App.$.renderClusterInfo(App.state.latestTimeStamp);
             });
+            if (params.has('hideRunningPods')) {
+                const hideRunningPodsQueryVar = params.get('hideRunningPods');
+                let hide = false;
+                if (hideRunningPodsQueryVar.toLowerCase() === "true") {
+                    hide = true;
+                }
+                document.getElementById("hideRunningPods").checked = hide;
+                App.state.hideRunningPods = hide;
+            }
+            const hideRunningPodsInput = document.getElementById("hideRunningPods");
+            hideRunningPodsInput.addEventListener('change', () => {
+                App.state.hideRunningPods = hideRunningPodsInput.checked;
+                App.$.renderClusterInfo(App.state.latestTimeStamp);
+            });
+
         },
         addIngressSection: () => {
             const ingress = document.createElement('div');
@@ -49,7 +67,7 @@ const App = {
         },
         renderNamespaces: () => {
             const namespaces = document.getElementsByClassName('namespaces')[0];
-            let html = 'Namespaces: <br/>'  
+            let html = 'Namespaces: <br/>'
             App.simpledashContext.Namespaces.forEach(ns => {
                 if (App.state.nsfilter !== '' && !ns.startsWith(App.state.nsfilter)) {
                     return;
@@ -74,6 +92,9 @@ const App = {
         },
         createPod: (pod) => {
             if (App.state.nsfilter !== '' && !pod.Namespace.startsWith(App.state.nsfilter)) {
+                return null;
+            }
+            if (App.state.hideRunningPods && pod.Status === "Running") { // show everything except running pods
                 return null;
             }
             let podBgColor = "#FFFFFF";

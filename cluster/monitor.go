@@ -90,6 +90,7 @@ func scan(clientset *kubernetes.Clientset, sc c.SimpledashContext) ClusterInfo {
 
 	return mainClusterInfo
 }
+
 func addPodsInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, namespace string) {
 	pods, err := clientset.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
@@ -102,15 +103,24 @@ func addPodsInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, name
 			continue
 		}
 
+		status := string(pod.Status.Phase) // will be running if any container in pod is running
+		for _, containerStatus := range pod.Status.ContainerStatuses {
+			if containerStatus.State.Waiting != nil { // if any container in pod is waiting, use that status
+				status = containerStatus.State.Waiting.Reason
+				break
+			}
+		}
+
 		podInfo := PodInfo{
 			Namespace: pod.Namespace,
 			Name:      pod.Name,
 			Image:     pod.Spec.Containers[0].Image,
-			Status:    string(pod.Status.Phase),
+			Status:    status,
 		}
 		clusterInfo.Nodes[pod.Spec.NodeName] = append(clusterInfo.Nodes[pod.Spec.NodeName], podInfo)
 	}
 }
+
 func addDeploymentsInfo(clientset *kubernetes.Clientset, clusterInfo *ClusterInfo, namespace string) {
 	deployments, err := clientset.AppsV1().Deployments(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
