@@ -1,0 +1,131 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: simpledash
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: simpledash-sa
+  namespace: simpledash
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: simpledash-ingress
+  annotations:
+  namespace: simpledash
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+      - simpledash.myurl.com
+      secretName: simpledash-tls-secret
+  rules:
+  - host: simpledash.myurl.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: simpledash
+            port:
+              number: 1337
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  namespace: simpledash
+  name: simpledashviewer
+rules:
+- apiGroups: [""] 
+  resources: ["pods", "nodes", "services", "namespaces", "ingresses",  "ingresses/endpoints"]
+  verbs: ["get", "watch", "list"]
+- apiGroups: ["apps"] 
+  resources: ["deployments"]
+  verbs: ["get", "watch", "list"]
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses
+  verbs: 
+  - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: simpledashviewer
+  namespace: simpledash
+subjects:
+- kind: ServiceAccount
+  name: simpledash-sa
+  namespace: simpledash
+  apiGroup: 
+roleRef:
+  kind: ClusterRole 
+  name: simpledashviewer 
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: simpledash
+  name: simpledash
+  namespace: simpledash
+spec:
+  ports:
+    - name: "simpledash"
+      port: 1337
+      targetPort: 1337
+  type: ClusterIP
+  selector:
+    app: simpledash
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: simpledash
+  name: simpledash
+  namespace: simpledash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: simpledash
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: simpledash
+    spec:
+      serviceAccountName: simpledash-sa
+      containers:
+        - image: hellgrenj/simpledash:v0.3.0
+          name: simpledash
+          env:
+          - name: "TIMEZONE"
+            value: 'Europe/Stockholm'
+          - name: "SIMPLEDASH_NAMESPACES"
+            value: '["default","simpledash"]'
+          - name: "SIMPLEDASH_CLUSTERNAME"
+            value: 'MyCluster'
+          - name: "POD_LOGS_LINK_ENABLED"
+            value: 'true'
+          - name: "POD_LOGS_LINK"
+            value: 'http://link-to-kibana-or-similiar'
+          - name: "DEPLOYMENT_LOGS_LINK_ENABLED"
+            value: 'true'
+          - name: "DEPLOYMENT_LOGS_LINK"
+            value: 'http://link-to-kibana-or-similiar'
+          - name: "SCAN_INTERVAL_IN_SECONDS"
+            value: "10"
+          ports:
+          - containerPort: 1337
+          resources: {}
+      restartPolicy: Always
+status: {}
